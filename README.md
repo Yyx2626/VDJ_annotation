@@ -1,2 +1,2 @@
 # VDJ_annotation
- scripts and pipeline for VDJ annotation and D usage in DJ joins of HTGTS tlx files
+ scripts and pipeline for VDJ annotation of HTGTS tlx files, including iteratively estimate D usage in VDJ joins
