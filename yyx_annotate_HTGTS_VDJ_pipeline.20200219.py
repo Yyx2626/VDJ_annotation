@@ -243,9 +243,9 @@ if not exist_file_or_dir(output_filenames[15], 'So skip all HTGTS annotation par
 	command = 'python3 {}/yyx_uniq_count_and_merge.20190111.py - 0 {}  {}:1-{} {}:1-{}'.format(scripts_root_dirname, output_filenames[10], output_filenames[6], original_colnum+5, output_filenames[8], original_colnum+5)
 	check_file_then_exec_command(output_filenames[11], command, should_time=True)
 
-	stop_if_file_not_exist('{}/yyx_show_or_skip_or_retrieve_columns.20190122.py'.format(scripts_root_dirname))
+	stop_if_file_not_exist('{}/yyx_show_or_skip_or_retrieve_columns.20190128.py'.format(scripts_root_dirname))
 #	list_assign(output_filenames, 15, '{}.HTGTS_VDJ_annotate.{}.tsv'.format(output_prefix, date_postfix) )
-	command = 'cat {} | python3 {}/yyx_show_or_skip_or_retrieve_columns.20190122.py skip '.format(output_filenames[11], scripts_root_dirname) + "'^count_in_file_.*'" + ' >' + output_filenames[15]
+	command = 'cat {} | python3 {}/yyx_show_or_skip_or_retrieve_columns.20190128.py skip '.format(output_filenames[11], scripts_root_dirname) + "'^count_in_file_.*'" + ' >' + output_filenames[15]
 	check_file_then_exec_command(output_filenames[15], command, should_time=True)
 	check_final_file_then_remove_intermediate_file(output_filenames[15], output_filenames[9:15])
 

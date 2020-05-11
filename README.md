@@ -6,7 +6,9 @@ Author: Adam Yongxin Ye @ Boston Children's Hospital / Harvard Medical School
 
 ## Setup
 
-The scripts are command-line perl and python scripts, with little dependence on other packages.
+The scripts are command-line perl and python scripts, with little dependence on other packages, 
+except for `yyx_annotate_tlx_midD_LCS.20190116.py`, which `import Bio.SeqIO` ([Biopython](https://biopython.org/)).
+
 They should be able to run in any modern Linux or Mac platform;
 or you might need to first install perl and python 3 for your platform.
 
@@ -20,6 +22,7 @@ When executing the following two pipeline scripts, just replace the command-line
 
 ### Step 1. annotate HTGTS tlx files
 
+#### yyx_annotate_HTGTS_VDJ_pipeline.20200219.py
 ```
 python3 yyx_annotate_HTGTS_VDJ_pipeline.20200219.py
 	<VDJ_annotation.bed> <D.fa> <scripts_dir> <input.tlx> <output_prefix>
@@ -37,7 +40,7 @@ Input:
   - `yyx_annotate_tlx_with_intersectBedResults.20181223.py`
   - `yyx_annotate_tlx_midD_LCS.20190116.py`
   - `yyx_uniq_count_and_merge.20190111.py`
-  - `yyx_show_or_skip_or_retrieve_columns.20190122.py`
+  - `yyx_show_or_skip_or_retrieve_columns.20190128.py`
 
 - `<VDJ_annotation.bed>`  contains the genomic coordinate range for each V/D/J segment
 
@@ -97,13 +100,14 @@ Output:  (where `yyyyMMdd` is the executing date)
   - Output: `<output_prefix>.HTGTS_annotate_merged.yyyyMMdd.tsv`  
     (this intermediate file will be automatically removed)
 
-- `yyx_show_or_skip_or_retrieve_columns.20190122.py`  to skip some useless columns and output the final output tsv file
+- `yyx_show_or_skip_or_retrieve_columns.20190128.py`  to skip some useless columns and output the final output tsv file
 
   - Output: `<output_prefix>.HTGTS_VDJ_annotated.yyyyMMdd.tsv`
 
 
 ### Step 2. iteratively estimate D usage in VDJ joins
 
+#### yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl
 ```
 perl yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl
 	<scripts_dir> <HTGTS_VDJ_annotated.tsv> <output_prefix> <mm9|mm9AJ>
@@ -157,8 +161,7 @@ done
 
 ### General utilities
 
-- `Yyx_check_col_num.pl`
-
+#### `Yyx_check_col_num.pl`
 ```
 Usage: perl Yyx_check_col_num.pl <files> ...
 Options:
@@ -170,14 +173,21 @@ Version: 0.1.0 (2012-12-02)
 Author: Adam Yongxin Ye @ CBI
 ```
 
-- `yyx_show_or_skip_or_retrieve_columns.20190122.py`
+This script can output the number of columns (or fields) for several lines head of each input file
+
+
+#### `yyx_show_or_skip_or_retrieve_columns.20190128.py`
 ```
-Usage: cat <input> | python3 yyx_show_or_skip_or_retrieve_columns.20190122.py <show|skip|retrieve> [column_pattern_1] [column_pattern_2] ...
+Usage: cat <input> | python3 yyx_show_or_skip_or_retrieve_columns.20190128.py <show|onlyshow|skip|retrieve> [column_pattern_1] [column_pattern_2] ...
 ```
 
-### Process tlx files
+This script can be used to 'show' the mapping of column index and column name (`<input>` should contain the headline of column names),
+or 'retrieve' (or 'skip') columns with specified `[column_pattern]`, which supports regex expression.
 
-- `yyx_tlx2bed.20200126.py`
+
+### Process HTGTS tlx files
+
+#### `yyx_tlx2bed.20200126.py`
 ```
 Usage: cat <input.tlx> | python this.py <which_part>
 Options:
@@ -185,7 +195,10 @@ Options:
 Output: STDOUT   bed format 6 columns
 ```
 
-- `yyx_sequence_segment_tlx.20181221.py`
+This script can convert tlx format to bed format, using the genomic coorindate (range) of 'junction', 'bait' or 'prey' for each read.
+
+
+#### `yyx_sequence_segment_tlx.20181221.py`
 ```
 Usage: cat <input.tlx> | python3 yyx_sequence_segment_tlx.20181221.py
 Input: STDIN   <input.tlx>
@@ -195,12 +208,19 @@ Output: STDOUT   append 5 columns
     pre  bait  mid  prey  post
 ```
 
-- `yyx_annotate_tlx_with_intersectBedResults.20181223.py`
+This script can retrieve the sequences of pre, bait, mid, prey, and post, 
+according to the relevant information (Columns B_Qstart, B_Qend, Qstart, Qend, and Seq) in the `<input.tlx>` file.
+
+
+#### `yyx_annotate_tlx_with_intersectBedResults.20181223.py`
 ```
 Usage: python3 yyx_annotate_tlx_with_intersectBedResults.20181223.py <input.tlx> <anno1.bed> [anno2.bed] ...
 ```
 
-- `yyx_annotate_tlx_midD_LCS.20190116.py`
+This script will merge the annotation information in `<anno1.bed>` (and `[anno2.bed]` ...) into the `<input.tlx>`, and output to STDOUT.
+
+
+#### `yyx_annotate_tlx_midD_LCS.20190116.py`
 ```
 Usage: cat <input.tlx> | python3 yyx_annotate_tlx_midD_LCS.20190116.py <D.fa> [score_cutoff (default:5)]
 Input: STDIN   <input.tlx>
@@ -210,9 +230,20 @@ Output: STDOUT   append 5+2 columns
     pre  bait  mid  prey  post   mid_D_score  mid_D_annotate
 ```
 
-- `yyx_uniq_count_and_merge.20190111.py`
+This script uses longest continuous substring (LCS) algorithm, to align the 'mid' sequence in `<input.tlx>` 
+ to reference D sequences recorded in `<D.fa>` (and their reverse complements, to distinguish D orientation).
+We did mid sequence alignment to possible D segments, 
+because when bait is on IGHJ and prey is on IGHV, the mid sequence may be on IGHD.
+
+LCS algorithm does not allow any gaps or mismatches in D alignment.
+Its score shows how many continuous base pairs exactly match between a query and a subject sequence.
+It will output this kind of mid_D annotation, only when the score >= `[score_cutoff]` (default:5); 
+otherwise, just output '-'.
+
+
+#### `yyx_uniq_count_and_merge.20190111.py`
 ```
-Usage: python this.py <empty_fill> <should_split_output> <output_prefix> <file1> <file2> [file3 ...]
+Usage: python yyx_uniq_count_and_merge.20190111.py <empty_fill> <should_split_output> <output_prefix> <file1> <file2> [file3 ...]
   <file1> can be 'filename' or 'filename:key_col_idx' or 'filename:col1-col2,col3,...' or 'filename:col:fieldname_prefix'
   (should have headline, columns separated by '\t', key_col_idx is 1-based)
 Output:
@@ -222,8 +253,14 @@ Output:
   <output_prefix>.1=???.tsv, <output_prefix>.1x2.tsv, <output_prefix>.1x2x3.tsv ...  if <should_split_output> = True
 ```
 
+This script merges input `<file1>`, `<file2>`, ..., 
+according to a part of their columns (key_col_idx, or col1-col2,col3,...,  as keys.
 
-- `yyx_reannotate_calculate_mid_D_usage.20200319.pl`
+If `<should_split_output>` is set, then the output will be splitted into several files, 
+ according to the row's occurrence in how many and which file.
+
+
+#### `yyx_reannotate_calculate_mid_D_usage.20200319.pl`
 ```
 Usage: cat <HTGTS_VDJ_annotated.tsv> | perl yyx_reannotate_calculate_mid_D_usage.20200319.pl <output_prefix> <mm9|mm9AJ>
 	[allowed_possible_D_num (default: 0)] [ref_D_usage.tsv] [bait_IGHJ]
@@ -236,4 +273,16 @@ Output:
 Version: 0.1.2 (2020-03-19)
 Author: Adam Yongxin Ye @ BCH
 ```
+
+This script will reanalyze the input `<HTGTS_VDJ_annotated.tsv>` (generated by `yyx_annotate_HTGTS_VDJ_pipeline.20200219.py`): 
+- only retrieve VDJ joins (bait overlapping IGHJ, and junction overlapping IGHV), thus discard DJ joins
+- reannotate mid D assignment, by parsing Column mid_D_annotate, for each read;   
+  count how many D segments (ignoring D orientation '(rC)') are among the best mid D alignment (denoted as 'possible_D_num'):
+  - if possible_D_num = 1, just assign the read to that specific D segment;
+  - if 1 < possible_D_num <= allowed_possible_D_num, then assign the read to these possible D segments 
+    with fraction proportional to `[ref_D_usage.tsv]`;
+  - if possible_D_num > allowed_possible_D_num, just set the mid D assignment to '-'.  
+    (discard these reads in the next step of estimating D usage)
+- estimate the (updated) D usage by summing over the D assignment of all the reads, 
+  and then normalized to 1 (as the sum of D usage).
 

@@ -1,5 +1,5 @@
-
-#### Usage: cat <input> | python3 this.py <show|skip|retrieve> [column_pattern_1] [column_pattern_2] ...
+#!/usr/bin/env python3
+usage = 'Usage: cat <input> | python3 this.py <show|onlyshow|skip|retrieve> [column_pattern_1] [column_pattern_2] ...'
 
 import sys, re
 
@@ -20,10 +20,14 @@ def which(bool_vec):
 
 empty_line_pattern = re.compile('^\s*$')
 
-mode = sys.argv[1]
-if mode not in ['show', 'skip', 'retrieve']:
-	print('Error: unrecognized mode="{}", which should be either "show" or "skip" or "retrieve"'.format(mode))
+if len(sys.argv) < 2:
+	print(usage, file=sys.stderr)
 	sys.exit(-1)
+
+mode = sys.argv[1]
+if mode not in ['show', 'skip', 'retrieve', 'onlyshow']:
+	print('Error: unrecognized mode="{}", which should be either "show" or "skip" or "retrieve"'.format(mode))
+	sys.exit(-2)
 
 column_pattern_strings = sys.argv[2:]
 pattern_len = len(column_pattern_strings)
@@ -47,14 +51,15 @@ for line in sys.stdin:
 		column_match_idxes = which(column_match_bool_vec)
 		column_not_match_idxes = which(column_not_match_bool_vec)
 		
-		if mode == 'show':
+		if mode == 'show' or mode == 'onlyshow':
 			if pattern_len > 0:
 				print('# {} matched columns:'.format(len(column_match_idxes)))
 				for j in column_match_idxes:
 					print('{}\t{}'.format(j+1, F[j]))
-				print('# {} unmatched columns:'.format(len(column_not_match_idxes)))
-				for j in column_not_match_idxes:
-					print('{}\t{}'.format(j+1, F[j]))
+				if mode == 'show':
+					print('# {} unmatched columns:'.format(len(column_not_match_idxes)))
+					for j in column_not_match_idxes:
+						print('{}\t{}'.format(j+1, F[j]))
 			else:
 				print('# {} columns:'.format(NC))
 				for j in range(NC):
