@@ -70,7 +70,7 @@ Output:  (where `yyyyMMdd` is the executing date)
   - \*_overlap_bps and \*_overlap_features  for junction, prey and bait : 3\*2=6 columns
   - mid_D_score and mid_D_annotate : 2 columns
 
-yyx_annotate_HTGTS_VDJ_pipeline.20200219.py will sequentially call:
+`yyx_annotate_HTGTS_VDJ_pipeline.20200219.py` will sequentially call:
 
 - `Yyx_check_col_num.pl`  to check the number of columns of <input.tlx>
 
@@ -97,7 +97,7 @@ yyx_annotate_HTGTS_VDJ_pipeline.20200219.py will sequentially call:
   - Output: `<output_prefix>.HTGTS_annotate_merged.yyyyMMdd.tsv`  
     (this intermediate file will be automatically removed)
 
-- `yyx_show_or_skip_or_retrieve_columns.20190122.py`  to skip some column and output the final output tsv file
+- `yyx_show_or_skip_or_retrieve_columns.20190122.py`  to skip some useless columns and output the final output tsv file
 
   - Output: `<output_prefix>.HTGTS_VDJ_annotated.yyyyMMdd.tsv`
 
@@ -121,7 +121,7 @@ Output:
 - `<output_prefix>.allow_*.iter_*.D_reannotated.tsv`
 - `<output_prefix>.allow_*.iter_*.D_usage.tsv`
 
-yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl will iteratively call 
+`yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl` will iteratively call 
 
 - `yyx_reannotate_calculate_mid_D_usage.20200319.pl`  
   which will focus on VDJ joins (Column junction_overlap_features starts with IGHV), 
@@ -136,22 +136,104 @@ into one table
 
 ```
 for allow_num in 99; do
-	echo -ne "D\titer_0" > tmp.head
-	ls step2/*.allow_${allow_num}.iter_9.D_usage.tsv | head -n1 | while read f; do
-		cat $f | perl -ne '@F=split/\t/; if($F[0] eq "-"){ print $F[0]."\t0\n"; }else{ print $F[0]."\t1\n"; }' >tmp.body
-	done
-	ls step2/*.allow_${allow_num}.iter_9.D_usage.tsv | while read f; do
-		g=${f##*/}
-		g=${g%%.*}
-		echo $g
-		echo -ne "\t$g.iter_9.sum\t$g.iter_9.prob"  >>tmp.head
-		mv tmp.body tmp
-		paste tmp <(cut -f2-3 $f)  >tmp.body
-	done
-	echo >>tmp.head
-	cat tmp.head tmp.body >step2/allow_${allow_num}.iter_9.merged_D_usage_summary.tsv
+    echo -ne "D\titer_0" > tmp.head
+    ls step2/*.allow_${allow_num}.iter_9.D_usage.tsv | head -n1 | while read f; do
+        cat $f | perl -ne '@F=split/\t/; if($F[0] eq "-"){ print $F[0]."\t0\n"; }else{ print $F[0]."\t1\n"; }' >tmp.body
+    done
+    ls step2/*.allow_${allow_num}.iter_9.D_usage.tsv | while read f; do
+        g=${f##*/}
+        g=${g%%.*}
+        echo $g
+        echo -ne "\t$g.iter_9.sum\t$g.iter_9.prob"  >>tmp.head
+        mv tmp.body tmp
+        paste tmp <(cut -f2-3 $f)  >tmp.body
+    done
+    echo >>tmp.head
+    cat tmp.head tmp.body >step2/allow_${allow_num}.iter_9.merged_D_usage_summary.tsv
 done
 ```
 
 ## Scripts
+
+### General utilities
+
+- `Yyx_check_col_num.pl`
+
+```
+Usage: perl Yyx_check_col_num.pl <files> ...
+Options:
+	-d STR	set delimiter (default: \t)
+	-n INT	the number of head lines that will be checked
+		(default: 4; -1 for all lines)
+
+Version: 0.1.0 (2012-12-02)
+Author: Adam Yongxin Ye @ CBI
+```
+
+- `yyx_show_or_skip_or_retrieve_columns.20190122.py`
+```
+Usage: cat <input> | python3 yyx_show_or_skip_or_retrieve_columns.20190122.py <show|skip|retrieve> [column_pattern_1] [column_pattern_2] ...
+```
+
+### Process tlx files
+
+- `yyx_tlx2bed.20200126.py`
+```
+Usage: cat <input.tlx> | python this.py <which_part>
+Options:
+   <which_part> can be: junction (default) | bait | prey
+Output: STDOUT   bed format 6 columns
+```
+
+- `yyx_sequence_segment_tlx.20181221.py`
+```
+Usage: cat <input.tlx> | python3 yyx_sequence_segment_tlx.20181221.py
+Input: STDIN   <input.tlx>
+    should have at least these columns:
+      B_Qstart, B_Qend, Qstart, Qend, Seq
+Output: STDOUT   append 5 columns
+    pre  bait  mid  prey  post
+```
+
+- `yyx_annotate_tlx_with_intersectBedResults.20181223.py`
+```
+Usage: python3 yyx_annotate_tlx_with_intersectBedResults.20181223.py <input.tlx> <anno1.bed> [anno2.bed] ...
+```
+
+- `yyx_annotate_tlx_midD_LCS.20190116.py`
+```
+Usage: cat <input.tlx> | python3 yyx_annotate_tlx_midD_LCS.20190116.py <D.fa> [score_cutoff (default:5)]
+Input: STDIN   <input.tlx>
+    should have at least these columns:
+      B_Qstart, B_Qend, Qstart, Qend, Seq
+Output: STDOUT   append 5+2 columns
+    pre  bait  mid  prey  post   mid_D_score  mid_D_annotate
+```
+
+- `yyx_uniq_count_and_merge.20190111.py`
+```
+Usage: python this.py <empty_fill> <should_split_output> <output_prefix> <file1> <file2> [file3 ...]
+  <file1> can be 'filename' or 'filename:key_col_idx' or 'filename:col1-col2,col3,...' or 'filename:col:fieldname_prefix'
+  (should have headline, columns separated by '\t', key_col_idx is 1-based)
+Output:
+  <output_prefix>.log  =  STDERR
+  <output_prefix>.tsv  (separated by '\t')
+     shared_field(s) , count_in_file_1, append_fields_in_file_1, count_in_file_2, append_fields_in_file_2, ...
+  <output_prefix>.1=???.tsv, <output_prefix>.1x2.tsv, <output_prefix>.1x2x3.tsv ...  if <should_split_output> = True
+```
+
+
+- `yyx_reannotate_calculate_mid_D_usage.20200319.pl`
+```
+Usage: cat <HTGTS_VDJ_annotated.tsv> | perl yyx_reannotate_calculate_mid_D_usage.20200319.pl <output_prefix> <mm9|mm9AJ>
+	[allowed_possible_D_num (default: 0)] [ref_D_usage.tsv] [bait_IGHJ]
+Input:
+	[ref_D_usage.tsv]	two columns: D, usage(%)
+Output:
+	<output_prefix>.D_reannotated.tsv
+	<output_prefix>.D_usage.tsv
+
+Version: 0.1.2 (2020-03-19)
+Author: Adam Yongxin Ye @ BCH
+```
 

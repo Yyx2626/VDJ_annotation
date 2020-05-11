@@ -7,7 +7,7 @@ use Getopt::Long;
 
 my $version = "
 	Version: 0.1.0 (2012-12-02)
-	Author: Adam_YeYongxin, CBI
+	Author: Adam Yongxin Ye @ CBI
 ";
 my $usage = "
 	Usage: $0 <files> ...
