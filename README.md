@@ -6,13 +6,13 @@ Author: Adam Yongxin Ye @ Boston Children's Hospital / Harvard Medical School
 
 ## Setup
 
-The scripts are command-line perl and python scripts, with little dependence on other packages, 
+The scripts are command-line perl and python scripts, with little dependence on other packages,  
 except for `yyx_annotate_tlx_midD_LCS.20190116.py`, which `import Bio.SeqIO` ([Biopython](https://biopython.org/)).
 
-They should be able to run in any modern Linux or Mac platform;
+They should be able to run in any modern Linux or Mac platform;  
 or you might need to first install perl and python 3 for your platform.
 
-To use the scripts, just download the scripts and put/unzipped in a folder.
+To use the scripts, just download the scripts and put/unzipped in a folder.  
 You can rename the folder with any name you like, such as `VDJ_annotation_scripts`.
 
 When executing the following two pipeline scripts, just replace the command-line argument `<scripts_dir>` with the path of the folder.
