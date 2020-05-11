@@ -102,7 +102,7 @@ yyx_annotate_HTGTS_VDJ_pipeline.20200219.py will sequentially call:
   - Output: `<output_prefix>.HTGTS_VDJ_annotated.yyyyMMdd.tsv`
 
 
-### Step 2. iteratively calculate D usage in VDJ joins
+### Step 2. iteratively estimate D usage in VDJ joins
 
 ```
 perl yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl
@@ -128,6 +128,30 @@ yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl will iteratively c
   assign ambiguous D segments according to  `[init_ref_D_usage.tsv]`,
   then sum up D assignment to estimate D usage in VDJ joins
 
+
+Later, you may also use some bash loops like below, 
+to rearrange the final `<output_prefix>.allow_*.iter_*.D_usage.tsv` files of several samples 
+into one table  
+(Suppose `[iter_num]` is 9 (by default), `[allowed_possible_D_num]` is 99 (by default), and `<output_prefix>` are step2/sample1, step2/sample2, ...)
+
+```
+for allow_num in 99; do
+	echo -ne "D\titer_0" > tmp.head
+	ls step2/*.allow_${allow_num}.iter_9.D_usage.tsv | head -n1 | while read f; do
+		cat $f | perl -ne '@F=split/\t/; if($F[0] eq "-"){ print $F[0]."\t0\n"; }else{ print $F[0]."\t1\n"; }' >tmp.body
+	done
+	ls step2/*.allow_${allow_num}.iter_9.D_usage.tsv | while read f; do
+		g=${f##*/}
+		g=${g%%.*}
+		echo $g
+		echo -ne "\t$g.iter_9.sum\t$g.iter_9.prob"  >>tmp.head
+		mv tmp.body tmp
+		paste tmp <(cut -f2-3 $f)  >tmp.body
+	done
+	echo >>tmp.head
+	cat tmp.head tmp.body >step2/allow_${allow_num}.iter_9.merged_D_usage_summary.tsv
+done
+```
 
 ## Scripts
 
