@@ -125,7 +125,7 @@ Output:
 - `<output_prefix>.allow_*.iter_*.D_reannotated.tsv`
 - `<output_prefix>.allow_*.iter_*.D_usage.tsv`
 
-`yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl` will iteratively call 
+`yyx_reannotate_VDJ_mid_D_usage_iteration_pipeline.20200319.pl` will iteratively call (for `[iter_num]` times)
 
 - `yyx_reannotate_calculate_mid_D_usage.20200319.pl`  
   which will focus on VDJ joins (Column junction_overlap_features starts with IGHV), 
@@ -236,7 +236,7 @@ We did mid sequence alignment to possible D segments,
 because when bait is on IGHJ and prey is on IGHV, the mid sequence may be on IGHD.
 
 LCS algorithm does not allow any gaps or mismatches in D alignment.
-Its score shows how many continuous base pairs exactly match between a query and a subject sequence.
+Its score shows how many continuous base pairs exactly match between a query (mid of each read) and a subject sequence (reference D sequences in `<D.fa>`).
 It will output this kind of mid_D annotation, only when the score >= `[score_cutoff]` (default:5); 
 otherwise, just output '-'.
 
