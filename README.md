@@ -6,8 +6,9 @@ Author: Adam Yongxin Ye @ Boston Children's Hospital / Harvard Medical School
 
 ## Setup
 
-The scripts are command-line perl and python scripts, with little dependence on other packages,  
-except for `yyx_annotate_tlx_midD_LCS.20190116.py`, which `import Bio.SeqIO` ([Biopython](https://biopython.org/)).
+The scripts are command-line perl and python scripts, with little dependence on other packages;  
+except for `yyx_annotate_tlx_midD_LCS.20190116.py`, which `import Bio.SeqIO` ([Biopython](https://biopython.org/));  
+and `yyx_annotate_HTGTS_VDJ_pipeline.20200219.py` needs to call `bedtools` and `python3`.
 
 They should be able to run in any modern Linux or Mac platform;  
 or you might need to first install perl and python 3 for your platform.
